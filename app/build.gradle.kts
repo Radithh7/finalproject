@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.smkth.app_finalproject"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.smkth.app_finalproject"
@@ -32,6 +32,9 @@ android {
     }
     kotlinOptions {
         jvmTarget = "11"
+    }
+    viewBinding {
+        enable= true
     }
 }
 
