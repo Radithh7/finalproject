@@ -1,12 +1,15 @@
 package com.smkth.app_finalproject.Fragment
 
+import android.animation.ObjectAnimator
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.LinearInterpolator
 import android.widget.Button
+import android.widget.ImageButton
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import com.google.android.material.textfield.TextInputEditText
@@ -14,6 +17,8 @@ import com.smkth.app_finalproject.R
 import com.smkth.app_finalproject.ResultActivity
 
 class CountFragment : Fragment() {
+
+    private lateinit var rotate: ObjectAnimator
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -24,23 +29,47 @@ class CountFragment : Fragment() {
         val weightEditText = view.findViewById<TextInputEditText>(R.id.weightEditText)
         val heightEditText = view.findViewById<TextInputEditText>(R.id.heightEditText)
         val calculateButton = view.findViewById<Button>(R.id.calculateButton)
+        val btnImg = view.findViewById<ImageButton>(R.id.btnimg)
+
+
+        // Setup animasi rotasi
+        rotate = ObjectAnimator.ofFloat(btnImg, "rotation", 0f, -360f).apply {
+            duration = 1500
+            repeatCount = ObjectAnimator.INFINITE
+            interpolator = LinearInterpolator()
+            interpolator = android.view.animation.AccelerateDecelerateInterpolator()
+        }
+
+        btnImg.setOnClickListener {
+            if (!rotate.isRunning) {
+                rotate.start()
+                btnImg.postDelayed({
+                    rotate.cancel()
+                    btnImg.rotation = 0f // Reset rotasi ke awal
+                    // Reset form (opsional)
+                    weightEditText.text?.clear()
+                    heightEditText.text?.clear()
+                }, 1500) // Durasi loading palsu
+            }
+        }
 
         calculateButton.setOnClickListener {
             val weightStr = weightEditText.text?.toString()?.trim()?.replace(',', '.')
             val heightStr = heightEditText.text?.toString()?.trim()?.replace(',', '.')
 
             if (!weightStr.isNullOrEmpty() && !heightStr.isNullOrEmpty()) {
-                try {
-                    val weight = weightStr.toFloat()
-                    val height = heightStr.toFloat() / 100
+                val weight = weightStr.toFloatOrNull()
+                val height = heightStr.toFloatOrNull()?.div(100)
+
+                if (weight != null && height != null && height > 0) {
                     val bmi = weight / (height * height)
                     val bmiFormatted = "%.1f".format(bmi)
                     showResultDialog(bmiFormatted)
-                } catch (e: NumberFormatException) {
-                    showErrorDialog("Format angka tidak valid. Gunakan titik untuk desimal (contoh: 65.5)")
+                } else {
+                    showErrorDialog("Format angka tidak valid. Gunakan titik/koma untuk desimal.")
                 }
             } else {
-                showErrorDialog("Harap isi berat dan tinggi badan")
+                showErrorDialog("Harap isi berat dan tinggi badan.")
             }
         }
 
@@ -48,7 +77,14 @@ class CountFragment : Fragment() {
     }
 
     private fun showResultDialog(bmi: String) {
-        val (category, color) = when (bmi.toFloat()) {
+        val bmiValue = bmi.replace(',', '.').toFloatOrNull()
+
+        if (bmiValue == null) {
+            showErrorDialog("Terjadi kesalahan saat membaca nilai BMI.")
+            return
+        }
+
+        val (category, color) = when (bmiValue) {
             in 0.0..18.4 -> Pair("Kurus", Color.BLUE)
             in 18.5..24.9 -> Pair("Normal", Color.GREEN)
             in 25.0..29.9 -> Pair("Gemuk", Color.YELLOW)
