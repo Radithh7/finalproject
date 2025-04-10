@@ -16,7 +16,7 @@
             android:name=".ResultActivity"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
+            android:name=".Fragment.MainActivity"
             android:exported="false" />
         <activity
             android:name=".SplashActivity"
